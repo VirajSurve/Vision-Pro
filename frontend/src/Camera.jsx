@@ -3,7 +3,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import ReactMarkdown from 'react-markdown';
 import "./Camera.css";
 
-// const apiKey = process.env.GEMINI_API_KEY;
+// const apiKey = process.env.GEMINI_API_KEY; // Use environment variables in production
 const genAI = new GoogleGenerativeAI("AIzaSyD2JwFzqCf9bzMtm2TsdZzrd2_td-RW6CE");
 
 const model = genAI.getGenerativeModel({
@@ -23,8 +23,6 @@ const Camera = () => {
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
-    let currentVideoRef = videoRef.current;
-
     const getCameraFeed = async () => {
       try {
         if (isVideoStreamActive) {
@@ -36,12 +34,12 @@ const Camera = () => {
               frameRate: { ideal: 30, max: 60 }
             }
           });
-          if (currentVideoRef) {
-            currentVideoRef.srcObject = stream;
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
           }
         } else {
-          if (currentVideoRef && currentVideoRef.srcObject) {
-            const tracks = currentVideoRef.srcObject.getTracks();
+          if (videoRef.current && videoRef.current.srcObject) {
+            const tracks = videoRef.current.srcObject.getTracks();
             tracks.forEach(track => track.stop());
           }
         }
@@ -53,8 +51,8 @@ const Camera = () => {
     getCameraFeed();
 
     return () => {
-      if (currentVideoRef && currentVideoRef.srcObject) {
-        const tracks = currentVideoRef.srcObject.getTracks();
+      if (videoRef.current && videoRef.current.srcObject) {
+        const tracks = videoRef.current.srcObject.getTracks();
         tracks.forEach(track => track.stop());
       }
     };
@@ -70,7 +68,6 @@ const Camera = () => {
 
   const captureImage = async () => {
     if (videoRef.current && canvasRef.current) {
-      // Stop the video stream first
       setVideoStreamActive(false);
 
       const canvas = canvasRef.current;
@@ -79,14 +76,12 @@ const Camera = () => {
       const ctx = canvas.getContext('2d');
       ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
 
-      // Convert canvas content to base64 data URL
       const base64Image = canvas.toDataURL('image/jpeg');
       console.log('Base64 image:', base64Image);
 
-      // Create an object with the specified format
       const image = {
         inlineData: {
-          data: base64Image.split(',')[1], // Extract base64 data part
+          data: base64Image.split(',')[1],
           mimeType: 'image/png',
         }
       };
@@ -100,18 +95,18 @@ const Camera = () => {
   };
 
   const handleCaptureClick = () => {
-    setButtonColor("grey"); // Change button color when clicked
+    setButtonColor("grey");
     captureImage();
   };
 
   const handleSend = async () => {
-    var userText = input;
+    const userText = input;
     setInput("");
     setMessages([...messages, { txt: userText, isBot: false }]);
 
     if (capturedImage) {
       const result = await model.generateContent([userText, capturedImage]);
-      setMessages([...messages,  { txt: userText, isBot: false }, { txt: result.response.text(), isBot: true }]);
+      setMessages([...messages, { txt: userText, isBot: false }, { txt: result.response.text(), isBot: true }]);
       console.log("result: ", result.response.text());
     } else {
       console.error("Captured image is null.");
@@ -121,18 +116,17 @@ const Camera = () => {
   const handleBottomBarDrag = (event) => {
     const bottomBar = bottomBarRef.current;
     if (bottomBar) {
-      bottomBar.style.transition="drag"; // Disable transition during drag
-      let startY = event.clientY || event.touches[0].clientY;
+      bottomBar.style.transition = "none";
+      const startY = event.clientY || event.touches[0].clientY;
       let diffY = 0;
 
       const onMouseMove = (e) => {
         diffY = (e.clientY || e.touches[0].clientY) - startY;
-        // bottomBar.style.transform = `translateY(${Math.min(0, diffY)}px)`;
       };
 
       const onMouseUp = () => {
-        bottomBar.style.transition = "transform 0.5s ease-in-out"; // Re-enable transition
-        bottomBar.style.transform = diffY < -50 ? "translateY(0)" : "translateY(95%)"; // Adjust based on drag distance
+        bottomBar.style.transition = "transform 0.5s ease-in-out";
+        bottomBar.style.transform = diffY < -50 ? "translateY(0)" : "translateY(95%)";
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
         document.removeEventListener('touchmove', onMouseMove);
@@ -144,6 +138,10 @@ const Camera = () => {
       document.addEventListener('touchmove', onMouseMove);
       document.addEventListener('touchend', onMouseUp);
     }
+  };
+
+  const handleEnter = async (e) => {
+    if (e.key === "Enter") await handleSend();
   };
 
   return (
@@ -160,32 +158,30 @@ const Camera = () => {
           </svg>
         </button>
         <div className='relative bottomBar' ref={bottomBarRef} >
-          <div className='bar flex justify-center'  onMouseDown={handleBottomBarDrag}
-          onTouchStart={handleBottomBarDrag} >
-           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-12 w-48 h-10">
-           <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
-           </svg>
-           </div>
-          <div className='result px-3 py-2 '><ReactMarkdown>{ans}</ReactMarkdown></div>
+          <div className='bar flex justify-center' onMouseDown={handleBottomBarDrag} onTouchStart={handleBottomBarDrag}>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-8 w-30 h-10">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
+            </svg>
+          </div>
+          <div className='result px-5 mb-2 '><ReactMarkdown>{ans}</ReactMarkdown></div>
           <div className='chat flex flex-col mt-0 overflow-y-auto max-h-lvh scrollBar-width-0'>
-          {
-            messages.map((message,i)=>(
-              <div key={i} className={message.isBot?"chatbot bg-red-500 rounded-2xl w-fit mr-auto":"chatbot bg-blue-500 rounded-2xl w-fit ml-auto"}>
-              <p className='text'><ReactMarkdown>{message.txt}</ReactMarkdown></p>
-              </div>
-            ))
-          }
-          <div className='pb-80'>
+            {
+              messages.map((message, i) => (
+                <div key={i} className={message.isBot ? "chatbot bg-red-500 rounded-2xl w-fit mr-auto" : "chatbot bg-blue-500 rounded-2xl w-fit ml-auto"}>
+                  <p className='text p-2'><ReactMarkdown>{message.txt}</ReactMarkdown></p>
+                </div>
+              ))
+            }
+            <div className='pb-80'></div>
           </div>
-          </div>
-          
-          <div className='fixed flex bg-red-500 searchBar bottom-5 w-full px-4'>
+          <div className='fixed flex bg-white searchBar bottom-5 px-4 rounded-full'>
             <input
-              className='search bg-gray-200 px-2 py-5 rounded-full w-full'
+              className='search bg-gray-200 px-3 py-5 rounded-full w-full text-lg'
               type='text'
               placeholder='Enter something...'
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleEnter}
             />
             <button className='sendbtn bg-gray-200 px-4 rounded-full ml-2' onClick={handleSend}>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-8">
