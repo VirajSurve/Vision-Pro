@@ -8,7 +8,8 @@
  */
 
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
-import { GoogleAIFileManager } from "@google/generative-ai/files";
+import { GoogleAIFileManager } from "@google/generative-ai/server";
+
 const apiKey = process.env.GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(apiKey);
 const fileManager = new GoogleAIFileManager(apiKey);
@@ -30,7 +31,6 @@ async function uploadToGemini(path, mimeType) {
 
 const model = genAI.getGenerativeModel({
   model: "gemini-1.5-pro",
-  systemInstruction: "You are a image assistant. Whenever i send you an image you will provide a brief description about it.",
 });
 
 const generationConfig = {
@@ -45,7 +45,8 @@ async function run() {
   // TODO Make these files available on the local file system
   // You may need to update the file paths
   const files = [
-    await uploadToGemini("image_flower4.jpeg", "image/jpeg"),
+    await uploadToGemini("image_nature2.jpeg", "image/jpeg"),
+    await uploadToGemini("image_nature2.jpeg", "image/jpeg"),
   ];
 
   const chatSession = model.startChat({
@@ -67,7 +68,25 @@ async function run() {
       {
         role: "model",
         parts: [
-          {text: "The image shows a vibrant sunflower in full bloom against a clear blue sky. The sunflower dominates the frame, its yellow petals radiating from a dark brown center. The center of the sunflower appears to have a few small insects, possibly bees. The sunflower's stem and large green leaves are partially visible, suggesting a field of sunflowers in the background. The image evokes a sense of summertime warmth and cheerfulness. \n"},
+          {text: "A wooden bridge crosses a small, lush creek in the middle of a dense, green forest. Sunlight filters through the trees, illuminating the foliage and creating a sense of tranquility."},
+        ],
+      },
+      {
+        role: "user",
+        parts: [
+          {
+            fileData: {
+              mimeType: files[1].mimeType,
+              fileUri: files[1].uri,
+            },
+          },
+          {text: "where it is located"},
+        ],
+      },
+      {
+        role: "model",
+        parts: [
+          {text: "I don't have access to real-time information, including locations, to tell you where this specific image was taken. If you want to know where it was taken, you could try using a reverse image search. \n\nIf you have any other questions or need further assistance, feel free to ask! \n"},
         ],
       },
     ],
