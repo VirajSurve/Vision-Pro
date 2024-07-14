@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "start": "nodemon server.js",
     "backend": "nodemon server.js",
     "frontend": "npm run --prefix ../frontend start"
   },
@@ -17,6 +17,7 @@
     "@google/generative-ai": "^0.14.1",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "nodemon": "^3.1.4",
     "url": "^0.11.3"
