@@ -3,6 +3,8 @@ import ReactMarkdown from 'react-markdown';
 import axios from "axios";
 import "./Camera.css";
 
+
+
 const Camera = () => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -43,9 +45,8 @@ const Camera = () => {
     getCameraFeed();
 
     return () => {
-      const video = videoRef.current;
-      if (video && video.srcObject) {
-        const tracks = video.srcObject.getTracks();
+      if (videoRef.current && videoRef.current.srcObject) {
+        const tracks = videoRef.current.srcObject.getTracks();
         tracks.forEach(track => track.stop());
       }
     };

@@ -6,9 +6,7 @@ import { GoogleAIFileManager } from "@google/generative-ai/server";
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from "url";
-import 'dotenv/config';
 
-const port =process.env.PORT || 3001;
 // Your actual API key
 const apiKey = "AIzaSyD2JwFzqCf9bzMtm2TsdZzrd2_td-RW6CE"; // Replace with your actual API key
 const genAI = new GoogleGenerativeAI(apiKey);
@@ -122,7 +120,6 @@ app.post('/chat', async (req, res) => {
   }
 });
 
-app.listen(port, '0.0.0.0', () => {
-  console.log('Server is running on port',port);
+app.listen(3001, '0.0.0.0', () => {
+  console.log('Server is running on port 3001');
 });
-
