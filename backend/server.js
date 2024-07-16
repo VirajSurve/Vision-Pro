@@ -6,9 +6,13 @@ import { GoogleAIFileManager } from "@google/generative-ai/server";
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from "url";
+import dotenv from 'dotenv';
+dotenv.config();
+
+
 
 // Your actual API key
-const apiKey = "AIzaSyD2JwFzqCf9bzMtm2TsdZzrd2_td-RW6CE"; // Replace with your actual API key
+const apiKey = process.env.GEMINI_API_KEY; // Replace with your actual API key
 const genAI = new GoogleGenerativeAI(apiKey);
 const fileManager = new GoogleAIFileManager(apiKey);
 
